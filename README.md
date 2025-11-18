@@ -96,3 +96,134 @@ Additional Tools
 
 Celery: A distributed task queue for handling asynchronous operations such as sending emails, processing payments, and generating reports. Celery improves application responsiveness by offloading time-consuming tasks to background workers.
 Redis: An in-memory data structure store used as a cache and message broker. Redis accelerates data retrieval, reduces database load, and supports real-time features like notifications and session management.
+
+
+Database Design
+Key Entities and Relationships
+1. User
+Represents all users of the platform (guests, hosts, and admins).
+Key Fields:
+
+user_id (Primary Key): Unique identifier for each user
+email: User's email address for authentication and communication
+password_hash: Securely hashed password for authentication
+first_name & last_name: User's personal information
+phone_number: Contact information for booking confirmations
+user_type: Designation as guest, host, or admin
+profile_photo: URL to user's profile image
+created_at: Timestamp of account creation
+
+Relationships:
+
+A User can have multiple Properties (as a host) - One-to-Many
+A User can make multiple Bookings (as a guest) - One-to-Many
+A User can write multiple Reviews - One-to-Many
+A User can make multiple Payments - One-to-Many
+
+2. Property
+Represents rental listings created by hosts.
+Key Fields:
+
+property_id (Primary Key): Unique identifier for each property
+host_id (Foreign Key): References the User who owns the property
+title: Name/title of the property listing
+description: Detailed description of the property
+location: Address and geographical coordinates
+price_per_night: Nightly rental rate
+number_of_guests: Maximum occupancy capacity
+amenities: List of available features (WiFi, parking, pool, etc.)
+availability_status: Whether the property is currently available for booking
+created_at: Timestamp of property listing creation
+
+Relationships:
+
+A Property belongs to one User (host) - Many-to-One
+A Property can have multiple Bookings - One-to-Many
+A Property can have multiple Reviews - One-to-Many
+A Property can have multiple Images - One-to-Many
+
+3. Booking
+Represents a reservation made by a guest for a specific property.
+Key Fields:
+
+booking_id (Primary Key): Unique identifier for each booking
+property_id (Foreign Key): References the booked Property
+user_id (Foreign Key): References the User making the booking
+check_in_date: Start date of the reservation
+check_out_date: End date of the reservation
+total_price: Calculated total cost for the stay
+number_of_guests: Number of people staying
+booking_status: Current status (pending, confirmed, cancelled, completed)
+created_at: Timestamp of booking creation
+
+Relationships:
+
+A Booking belongs to one User (guest) - Many-to-One
+A Booking belongs to one Property - Many-to-One
+A Booking has one Payment - One-to-One
+A Booking can have one Review - One-to-One
+
+4. Review
+Represents feedback and ratings provided by guests after their stay.
+Key Fields:
+
+review_id (Primary Key): Unique identifier for each review
+property_id (Foreign Key): References the Property being reviewed
+user_id (Foreign Key): References the User who wrote the review
+booking_id (Foreign Key): References the associated Booking
+rating: Numerical score (e.g., 1-5 stars)
+comment: Written feedback about the stay
+created_at: Timestamp of review submission
+
+Relationships:
+
+A Review belongs to one User (guest) - Many-to-One
+A Review belongs to one Property - Many-to-One
+A Review belongs to one Booking - Many-to-One
+
+5. Payment
+Represents financial transactions for bookings.
+Key Fields:
+
+payment_id (Primary Key): Unique identifier for each payment
+booking_id (Foreign Key): References the associated Booking
+user_id (Foreign Key): References the User making the payment
+amount: Total payment amount
+payment_method: Type of payment (credit card, PayPal, etc.)
+payment_status: Current status (pending, completed, failed, refunded)
+transaction_id: External payment gateway transaction reference
+payment_date: Timestamp of payment processing
+
+Relationships:
+
+A Payment belongs to one User - Many-to-One
+A Payment belongs to one Booking - One-to-One
+
+6. Message
+Represents communication between guests and hosts.
+Key Fields:
+
+message_id (Primary Key): Unique identifier for each message
+sender_id (Foreign Key): References the User sending the message
+recipient_id (Foreign Key): References the User receiving the message
+property_id (Foreign Key): References the Property being discussed
+message_content: Text content of the message
+sent_at: Timestamp of message delivery
+
+Relationships:
+
+A Message belongs to one User (sender) - Many-to-One
+A Message belongs to one User (recipient) - Many-to-One
+A Message can reference one Property - Many-to-One
+
+Database Relationship Summary
+The database design follows a normalized relational structure where:
+
+Users are central to the system, acting as both guests and hosts
+Properties are owned by host users and can receive multiple bookings
+Bookings connect guests to properties for specific dates and generate payments
+Reviews provide feedback linking users, properties, and completed bookings
+Payments ensure secure financial transactions for each booking
+Messages facilitate communication between users regarding properties
+
+This design ensures data integrity, minimizes redundancy, and supports efficient querying for all application features.
